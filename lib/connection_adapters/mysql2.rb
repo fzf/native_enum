@@ -11,15 +11,25 @@ module ActiveRecord
       alias_method :native_database_types_without_enum, :native_database_types
       alias_method :native_database_types, :native_database_types_with_enum
 
-      def type_to_sql_with_enum type, limit=nil, *args
-        if type.to_s == "enum" || type.to_s == "set"
-          "#{type}(#{quoted_comma_list limit})"
-        else
-          type_to_sql_without_enum type, limit, *args
+      if ActiveRecord::VERSION::MAJOR >= 5
+        def type_to_sql_with_enum type, *args
+          if type.to_s == "enum" || type.to_s == "set"
+            "#{type}(#{quoted_comma_list args[0][:limit]})"
+          else
+            type_to_sql_without_enum type, *args
+          end
+        end
+      else
+        def type_to_sql_with_enum type, limit=nil, *args
+          if type.to_s == "enum" || type.to_s == "set"
+            "#{type}(#{quoted_comma_list limit})"
+          else
+            type_to_sql_without_enum type, limit, *args
+          end
         end
       end
-      alias_method :type_to_sql_without_enum, :type_to_sql
-      alias_method :type_to_sql, :type_to_sql_with_enum
+        alias_method :type_to_sql_without_enum, :type_to_sql
+        alias_method :type_to_sql, :type_to_sql_with_enum
 
       private
       def quoted_comma_list list
